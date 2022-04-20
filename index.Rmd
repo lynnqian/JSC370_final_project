@@ -21,7 +21,7 @@ The variables we are interested in:
 - `Size`: the size of the app. This is a new variable compared with my midterm project, and we will discuss about it below.
 - `Installs`: number of installs of the app.
 
-Download my report here: 
+Download my report here: https://github.com/lynnqian/JSC370_final_project/blob/master/final%20report.pdf
 
 ### Interactive Visualizations
 
