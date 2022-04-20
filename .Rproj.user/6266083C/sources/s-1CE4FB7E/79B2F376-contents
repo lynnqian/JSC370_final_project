@@ -3,6 +3,8 @@
 
 Link to the website: https://lynnqian.github.io/JSC370_final_project/
 
+You can find the report here: https://github.com/lynnqian/JSC370_final_project/blob/master/final%20report.pdf
+
 #### Introduction
 
 Nowadays, we have so many apps on our phone and computers and everyone’s life is associated with them. I want to know people’s opinion on different apps and whether they favor some apps with particular characteristics than others. I have narrowed my target to apps on Google Play Store.
@@ -26,7 +28,6 @@ This question can be decomposed into smaller questions:
 - `Size`: the size of the app. This is a new variable compared with my midterm project, and we will discuss about it below.
 - `Installs`: number of installs of the app.
 
-You can find the report here: https://github.com/lynnqian/JSC370_final_project/blob/master/final%20report.pdf
 
 #### Conclusion
 
