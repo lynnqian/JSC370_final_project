@@ -7,7 +7,9 @@ output:
         toc_float: TRUE
 ---
 
-Nowadays, we have so many apps on our phone and computers and everyone's life is associated with them. I want to know people's opinion on different apps and whether they favor some apps with particular characteristics than others. I have narrowed my target to apps on Google Play Store.
+### Introduction
+
+Nowadays, we have so many apps on our phone and computers and everyone's life is associated with them. The project is focused on factors affecting people's opinion on different apps and whether they favor some apps with particular characteristics than others. I have narrowed my target to apps on Google Play Store.
 
 The primary question of interest is: What are the factors for different app's rating?
 
@@ -18,6 +20,8 @@ The variables we are interested in:
 - `Category`: the category of the app. Examples are: `art and design`, `Game`, `Tools`, etc.
 - `Size`: the size of the app. This is a new variable compared with my midterm project, and we will discuss about it below.
 - `Installs`: number of installs of the app.
+
+Download my report here: 
 
 ### Interactive Visualizations
 
@@ -72,7 +76,7 @@ playstore$install_level <- ifelse(playstore$Installs < 1000, "not popular",
 
 #### Installs vs Reviews
 
-Here, we want to see if `Installs` and `Reviews` can both be used to represent popularity of the app by comparing them using the following line graph. 
+Here, we want to see if the two variables: `Installs` and `Reviews` can both be used to represent popularity of the app by comparing them using the following line graph.
 
 ```{r}
 playstore %>%
@@ -83,7 +87,7 @@ playstore %>%
 
 #### Line graph
 
-This is a line plot with all the categories of the apps involved and combined with `Reviews`, and we want to see if there is any patterns between `Category` of the app and its `Rating`.
+This is a line plot with all the categories of the apps involved and combined with `Reviews`, and we want to see if there is any patterns between `Category` of the app and the its `Rating`.
 
 ```{r}
 line_plot <- ggplot(playstore, aes(x = Reviews, y = Rating, colour = Category)) + 

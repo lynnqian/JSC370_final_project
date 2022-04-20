@@ -23,7 +23,7 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
 playstore_raw <- data.table::fread("googleplaystore.csv",fill=TRUE)
 ```
 
-Nowadays, we have so many apps on our phone and computers and everyone's life is associated with them. I want to know people's opinion on different apps and whether they favor some apps with particular characteristics than others. I have narrowed my target to apps on Google Play Store.
+Nowadays, we have so many apps on our phone and computers and everyone's life is associated with them. I want to know what affects people's opinion on different apps and whether they favor some apps with particular characteristics than others. I have narrowed my target to apps on Google Play Store.
 
 The primary question of interest is: What are the factors for different app's rating?
 
