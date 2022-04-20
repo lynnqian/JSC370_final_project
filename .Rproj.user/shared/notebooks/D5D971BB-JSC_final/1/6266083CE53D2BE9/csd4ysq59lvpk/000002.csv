@@ -1,0 +1,2 @@
+"0","head(count(playstore, Category)) %>%"
+"0","  knitr::kable(caption = ""number of apps per each category: first 6 categories"")"

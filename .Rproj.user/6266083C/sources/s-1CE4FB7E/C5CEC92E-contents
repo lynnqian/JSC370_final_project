@@ -1,0 +1,11 @@
+name: "my-website"
+output_dir: "."
+navbar:
+  
+  right:
+    - text: "my github page"
+      href: https://github.com/lynnqian
+output:
+  html_document:
+    theme: cosmo
+    css: styles.css

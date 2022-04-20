@@ -1,0 +1,133 @@
+---
+title: "HW5"
+author: "Yufan Qian"
+date: "10/04/2022"
+output: 
+  html_document:
+    theme: cosmo
+    css: styles.css
+---
+
+For Homework 5, I will be using my google-playstore data from midterm project.
+
+The variables we are interested in:
+
+- `Rating`: the rating of the app. We want to find all the factors affecting the rating.
+- `Reviews`: the number of reviews of the app. Could indicate the popularity of the app.
+- `Category`: the category of the app. Examples are: `art and design`, `Game`, `Tools`, etc.
+- `Size`: the size of the app. This is a new variable compared with my midterm project, and we will discuss about it below.
+- `Installs`: number of installs of the app.
+
+```{r message=FALSE, echo=FALSE, warning=FALSE, results='hide'}
+# load the library we need
+library(data.table)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(mgcv)
+library(plotly)
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE) 
+
+# load in the data
+playstore_raw <- data.table::fread("googleplaystore.csv",fill=TRUE)
+
+# all the variables with missing values
+names(which(sapply(playstore_raw, anyNA)))
+
+# remove observations with missing values for Rating
+playstore <- dplyr::filter(playstore_raw, !is.na(Rating))
+# keep only one observation for each apps
+playstore <- playstore[match(unique(playstore$App), playstore$App),]
+
+playstore <- playstore[Rating <= 5]
+
+# convert from type character to type integer
+playstore$Reviews <- type.convert(playstore$Reviews)
+
+playstore$review_level <- ifelse(playstore$Reviews < 1000, "almost no reviews", 
+                                    ifelse(playstore$Reviews < 10000, "medium reviews", 
+                                           ifelse(playstore$Reviews < 50000, "many reviews", "lots of reviews")))
+
+# remove the last character: +
+playstore$Installs <- substr(playstore$Installs, 1, nchar(playstore$Installs)-1)
+# convert from type character to type integer
+playstore$Installs <- as.numeric(gsub(",","",playstore$Installs))
+
+playstore$install_level <- ifelse(playstore$Installs < 1000, "not popular", 
+                                    ifelse(playstore$Installs < 10000, "normal", 
+                                           ifelse(playstore$Installs < 50000, "popular", "super popular")))
+# change the type of the size
+playstore$new_size <- as.numeric(substr(playstore$Size,1,nchar(playstore$Size)-1))
+```
+
+<br>
+
+## Three different interactive visualizations
+
+### 1. Using line plot for EDA
+
+First, we will be using `geom_line` in `ggplotly` for EDA to see if there is any patterns or trend in our dataset. I will have number of reviews as the x-variable, rating of the app as the y-variable, and category of the app as the colour so that we can see the effects between them.
+
+```{r}
+p1 <- ggplot(playstore, aes(x = Reviews, y = Rating, colour = Category)) + 
+  geom_line()
+
+ggplotly(p1)
+```
+
+From this graph, we could easily see the extreme low rating value with colour pink, and very low numbers of reviews. This is from category `Tools`, with only 3 reviews and rating of 1.0. Other than some extreme values, must of the apps have rating between 4 and 5 and less than 20,000,000 reviews, even with fluctuation. The apps have more than 30,000,000 reviews are from categories `Tools`, `Game`, `Communication` and `Social`, with the first two has lower number of reviews but higher ratings than the later two. I think this result is due to that apps for `Communication` and `Social` are more popular, and are necessary for people in all the age groups(as long as they have a phone), so these apps have more reviews. But `Tools` and `Game` are more specific to certain people. For example, `Tools` are only used for those who need this tool, and `Game` are usually for students or young adults who are interested in the game. Also, `Game` type of apps are for entertainment, thus may be the reason for a higher rating.
+
+<br>
+
+### 2. Scatter plot - involving size of the app
+
+Now we want to take a closer look at the factors affecting rating, with the newly added independent variable: size of the app. Here, I have plotted a scatter plot, with Rating of each app as our y value, and number of Reviews of each app as our x value. The size of the point is linear with the size of the app, and the color represent different categories of the apps. I added the new varible `Size` because I do believe the size of apps may become a constraint for some people.
+
+```{r}
+playstore %>%
+  plot_ly(x = ~Reviews, y = ~Rating, type = 'scatter', mode = "markers", color = ~Category,  marker = list(size=~new_size/10, sizemode = 'diameter', opacity = 0.5))
+```
+
+From the scatter plot, first thing we would notice is that all the apps with large number of reviews are small in size (small circles on the right hand side, some are even hard to see), while all the large circles (i.e., apps with large size) tends to have smaller number of reviews. I think this observation aligned with my guess and makes sense, since people may encounter storage limitation problem on their phone, so that they would choose to download apps with smaller sizes.
+
+In order to see the patterns more clearly, I created a `new_playstore` dataset with only apps that has reviews < 200,000 so that we could zoom in the left hand side of the graph.
+
+```{r}
+new_playstore <- playstore[playstore$Reviews < 200000]
+new_playstore %>%
+  plot_ly(x = ~Reviews, y = ~Rating, type = 'scatter', mode = "markers", color = ~Category,  marker = list(size=~new_size/10, sizemode = 'diameter', opacity = 0.5))
+```
+
+From this new plot, the first thing we would notice is that cluster of pink and purple on the right, with large size of the app and larger number of reviews than those on the left. These pink are from category `Game`, and purple are form category `Family`, and that explains why they are large since game types and family types of applications are usually large in size due to high-quality models and high resolutions. Other than that, we do see that most apps have ratings between 3 and 5, no matter what size of the app they have.
+
+<br>
+
+### 3. Multiple line chart - number of Reviews and number of Installs
+
+For all the graphs before, we used `Reviews` to indicate whether an app is popular or not. Here, we want to check whether for the same rating, the higher number of reviews indicates higher number of installations of the app, since the variable `Installs` can also be used as an indication for popularity.
+
+I have decreased the number of installs by a factor of 30 for better visualization.
+
+```{r}
+playstore %>%
+  filter(Category == "GAME") %>%
+  plot_ly(x=~Rating, y=~Installs/30, type = "scatter", name = "Installs", mode = "lines") %>%
+  add_lines(x=~Rating, y=~Reviews, type = "scatter", name = "Reviews", mode = "lines")
+```
+
+From the graph above, we clearly see that the peak of the line for number of reviews is near the peak of the line for number of installs. All the high values of number of installs/reviews are between ratings 4 and ratings 5, and the peaks are around 4.5. This is probably different than what people would normally guess, since we would think that higher rating and popularity are linked with each other. But the peak is not at rating of 5. I guess this is because the more popular the app is (more people using it), the more criticizing the app will receive, and there is no app that makes everyone happy.
+
+<br>
+
+To see the overall conclusion, please go to the conclusion tab. 
+
+
+
+
+
+
+
+
+
+

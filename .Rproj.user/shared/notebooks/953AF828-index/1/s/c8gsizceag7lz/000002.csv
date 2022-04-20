@@ -1,0 +1,4 @@
+"0","playstore %>%"
+"0","  filter(Category == ""GAME"") %>%"
+"0","  plot_ly(x=~Rating, y=~Installs/30, type = ""scatter"", name = ""Installs"", mode = ""lines"") %>%"
+"0","  add_lines(x=~Rating, y=~Reviews, type = ""scatter"", name = ""Reviews"", mode = ""lines"")"
