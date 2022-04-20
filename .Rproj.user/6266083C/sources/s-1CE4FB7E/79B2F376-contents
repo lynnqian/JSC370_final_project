@@ -3,7 +3,11 @@
 
 Link to the website: https://lynnqian.github.io/JSC370_final_project/
 
+#### Introduction
+
 Nowadays, we have so many apps on our phone and computers and everyone’s life is associated with them. I want to know people’s opinion on different apps and whether they favor some apps with particular characteristics than others. I have narrowed my target to apps on Google Play Store.
+
+#### Primary question of interest
 
 The primary question of interest is: What are the factors for different app’s rating?
 
@@ -14,7 +18,7 @@ This question can be decomposed into smaller questions:
 * What is the association between the category of the app and the rating of the app?
 * What is the association between the size of the app and the rating of the app?
 
-The variables we are interested in:
+#### Variables we are interested in
 
 - `Rating`: the rating of the app. We want to find all the factors affecting the rating.
 - `Reviews`: the number of reviews of the app. Could indicate the popularity of the app.
@@ -24,6 +28,6 @@ The variables we are interested in:
 
 You can find the report here: https://github.com/lynnqian/JSC370_final_project/blob/master/final%20report.pdf
 
-#### conclusion
+#### Conclusion
 
 In conclusion, we found that the `Rating` of apps on Google Play Store indeed depends on many other factors, and through our analysis, we found that number of `Installs` of the app, number of `Reviews` of the app, `Category` of the app and `Size` of the app all contributes to the variation of `Rating`, with `Size` contributes less than other three predictors. The relationship between predictors and response is non-linear, there are associations and interactions between the four predictors stated above, and the non-linear association model with cubic regression splines we generated could explain 13.5% of the deviance in `Rating`.
