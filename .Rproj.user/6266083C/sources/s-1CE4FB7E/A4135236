@@ -3,7 +3,7 @@
     "path": "~/Desktop/Class/JSC370/JSC final project/index.Rmd",
     "project_path": "index.Rmd",
     "type": "r_markdown",
-    "hash": "3873877757",
+    "hash": "1824004367",
     "contents": "",
     "dirty": false,
     "created": 1650246275767.0,
@@ -12,15 +12,15 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "23,122",
-        "scrollLine": "8"
+        "cursorPosition": "39,41",
+        "scrollLine": "20"
     },
     "folds": "",
-    "lastKnownWriteTime": 1650487233,
+    "lastKnownWriteTime": 1650487289,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1650487233436,
+    "last_content_update": 1650487289903,
     "read_only": false,
     "read_only_alternatives": []
 }

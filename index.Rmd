@@ -1,5 +1,5 @@
 ---
-title: "JSC370 Homework 5"
+title: "JSC370 Final Project"
 author: "Yufan Qian"
 output: 
     html_document:
@@ -37,7 +37,7 @@ library(plotly)
 knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE) 
 
 # load in the data
-playstore_raw <- data.table::fread("googleplaystore.csv",fill=TRUE)
+playstore_raw <- data.table::fread("data/googleplaystore.csv",fill=TRUE)
 
 # all the variables with missing values
 names(which(sapply(playstore_raw, anyNA)))
