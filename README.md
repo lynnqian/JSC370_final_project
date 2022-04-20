@@ -3,7 +3,7 @@
 
 Link to the website: https://lynnqian.github.io/JSC370_final_project/
 
-You can find the report here: https://github.com/lynnqian/JSC370_final_project/blob/master/final%20report.pdf
+You can find the report here: https://github.com/lynnqian/JSC370_final_project/blob/master/JSC%20Final%20files%20/JSC_final.pdf
 
 #### Introduction
 
