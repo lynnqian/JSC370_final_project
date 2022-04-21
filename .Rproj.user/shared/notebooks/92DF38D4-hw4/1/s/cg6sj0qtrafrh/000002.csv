@@ -1,0 +1,4 @@
+"0","tibble("
+"0","       Methods = c(""regression tree"", ""bagging"", ""random forest"", ""boosting"", ""XGBoost""),"
+"0","       MSE = c(98928.78, 81739.97, 86423.04, 69508.75, 124443.2)) %>% "
+"0","  knitr::kable(caption = ""different sources of variance and their proportions"")"

@@ -16,6 +16,13 @@ library(tidyr)
 library(ggplot2)
 library(mgcv)
 library(plotly)
+library(randomForest)
+library(rpart)
+library(gbm)
+library(xgboost)
+library(tidyverse)
+library(rpart.plot)
+library(caret)
 
 knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE) 
 
@@ -359,6 +366,33 @@ plot(Rating_gam)
 
 From the summary table generated, the adjusted r-squared value now is 0.128, which is larger than linear case, and deviance explained is equal to 13.5%. The p-value for variable `Size` is larger than the p-value for other variables, but still is < 0.05 which means the variable is significant and should not be removed. Thus, we can conclude that all of the variables are necessary for our model. Through the increasing values of adjusted r-squared compared with all the linear models above, we can conclude that there is indeed a non-linear relationship between `Installs`, `Reviews`, `Category`, `Size` and `Rating`. 
 
+
+Lastly, let's check our conclusion using pruned regression tree. Since the `Category` variable has too many values, I used the other three: `Installs`, `Size` and `Reviews`. 
+
+```{r, fig.height=3, fig.width=5}
+set.seed(111)
+# split into training and testing
+train_idx <- sample(1:nrow(playstore), round(0.7 * nrow(playstore)))
+train <- playstore[train_idx, c("Rating", "Installs", "Reviews", "Size")]
+test <- playstore[-train_idx, c("Rating", "Installs", "Reviews", "Size")]
+
+treefit <- rpart(Rating~., method = "anova", control = list(cp=0), data = train)
+optimalcp <- treefit$cptable[which.min(treefit$cptable[,"xerror"]), "CP"]
+treepruned <- prune(treefit, cp = optimalcp)
+rpart.plot(treepruned)
+```
+
+
+```{r, results='hide'}
+# for regression tree
+tree_pred <- predict(treepruned, test)
+test_tree <- cbind(test, tree_pred)
+tree_mse <- sum((test_tree$tree_pred - test_tree$Rating)^2)/dim(test_tree)[1]
+tree_mse
+```
+
+Here, we do see that two levels of the tree already explains the `Rating` very well. If we have number of `Reviews` < 4840, we get average `Rating` 4.1. If we have number of `Reviews` >= 4840, we get average `Rating` 4.3. This aligns with our finding above that `Reviews` has a positive association with `Rating`. Combined with the varaible `Installs`, we get this overall pruned regression tree. After calculating the MSE of the regression tree using the testing data, we get a value of 0.27. This is a small error, and indicates that our model predicts the testing data very well.
+
 ### Conclusion/summary
 
-In conclusion, we found that the `Rating` of apps on Google Play Store indeed depends on many other factors, and through our analysis, we found that number of `Installs` of the app, number of `Reviews` of the app, `Category` of the app and `Size` of the app all contributes to the variation of `Rating`, with `Size` contributes less than other three predictors. The relationship between predictors and response is non-linear, there are associations and interactions between the four predictors stated above, and the non-linear association model with cubic regression splines we generated could explain 13.5% of the deviance in `Rating`.
+In conclusion, we found that the `Rating` of apps on Google Play Store indeed depends on many other factors, and through our analysis, we found that number of `Installs` of the app, number of `Reviews` of the app, `Category` of the app and `Size` of the app all contributes to the variation of `Rating`, with `Size` contributes less than other three predictors. The relationship between predictors and response is non-linear, there are associations and interactions between the four predictors stated above, and the non-linear association model with cubic regression splines we generated could explain 13.5% of the deviance in `Rating`. We also built a regression tree, which aligns with our hypothesis and confirmed the positive relationship between number of `Reviews` and `Rating`.

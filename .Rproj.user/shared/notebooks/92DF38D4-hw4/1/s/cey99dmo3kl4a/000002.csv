@@ -1,0 +1,4 @@
+"0","# Prune and plot the tree and summarize"
+"0","optimalcp <- treefit$cptable[which.min(treefit$cptable[,""xerror""]), ""CP""]"
+"0","treepruned <- prune(treefit, cp = optimalcp)"
+"0","rpart.plot(treepruned)"

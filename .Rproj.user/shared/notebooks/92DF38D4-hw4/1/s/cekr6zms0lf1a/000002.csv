@@ -1,0 +1,4 @@
+"0","# split into training and testing"
+"0","train_idx <- sample(1:nrow(players), round(0.7 * nrow(players)))"
+"0","train <- players[train_idx,]"
+"0","test <- players[-train_idx,]"

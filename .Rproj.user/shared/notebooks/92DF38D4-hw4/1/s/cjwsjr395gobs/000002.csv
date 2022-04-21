@@ -1,0 +1,3 @@
+"0","# variable importance plot"
+"0","player_boost <- gbm(Salary~., data = train, distribution = 'tdist', n.trees = 1000, shrinkage = 0.044, interaction.depth = 1)"
+"0","summary(player_boost)"

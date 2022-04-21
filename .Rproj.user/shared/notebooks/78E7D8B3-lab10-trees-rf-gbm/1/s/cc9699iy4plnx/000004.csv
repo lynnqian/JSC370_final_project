@@ -1,0 +1,5 @@
+"0",""
+"0","treefit <- rpart(y~x, method = ""anova"", control = list(cp=0), data= nonlin_train)"
+"0",""
+"0","rpart.plot(treefit)"
+"0",""

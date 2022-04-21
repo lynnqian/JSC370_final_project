@@ -1,0 +1,4 @@
+"0","fun1alt <- function(mat) {"
+"0","  ans <- rowSums(mat)"
+"0","  ans"
+"0","}"

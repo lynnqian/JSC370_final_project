@@ -1,0 +1,3 @@
+"0","# Fit a regression tree using the training set and then plot it"
+"0","treefit <- rpart(Salary~., method = ""anova"", control = list(cp=0), data = train)"
+"0","rpart.plot(treefit)"

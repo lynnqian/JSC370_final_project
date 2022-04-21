@@ -1,0 +1,4 @@
+"0","player_rf <- randomForest(Salary~. , data = train, na.action = na.omit)"
+"0",""
+"0","# variable importance plot"
+"0","varImpPlot(player_rf, n.var=19, col=""blue"")"

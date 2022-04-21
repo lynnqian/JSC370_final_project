@@ -1,0 +1,3 @@
+"0","players <- read.csv(""hitters.csv"", stringsAsFactors = T)"
+"0","players <- na.omit(players)"
+"0","head(players)"

@@ -1,0 +1,323 @@
+---
+title: "HW4"
+author: "Yufan Qian"
+date: "26/03/2022"
+output: 
+  prettydoc::html_pretty:
+    theme: cayman
+---
+
+```{r message=FALSE, echo=FALSE}
+# load the library we need
+library(parallel)
+library(foreach)
+library(doParallel)
+library(rpart)
+library(randomForest)
+library(gbm)
+library(xgboost)
+library(tidyverse)
+library(rpart.plot)
+library(caret)
+options(warn=-1)
+```
+
+### HPC
+
+#### Problem 1: rewrite R functions
+
+For the first problem, we are trying to rewrite the function which calculates the total row sums for a matrix.
+Here, I used the `rowSums` function, which returns the sums of each row in the dataset/matrix.
+
+```{r, echo=FALSE}
+# Total row sums
+fun1 <- function(mat) {
+  n <- nrow(mat)
+  ans <- double(n)
+  for (i in 1:n) {
+    ans[i] <- sum(mat[i, ])
+  }
+  ans
+}
+```
+
+
+```{r}
+fun1alt <- function(mat) {
+  ans <- rowSums(mat)
+  ans
+}
+```
+
+
+The second function is for calculating the total sum by row. The original function used two for loops, which requires O(n^2) time complexity. We want to make it faster.
+
+Here, I used the `apply` function, where the first argument indicates the matrix, second argument indicates applied over rows, and the third argument indicates the function to be applied. In this case, we use `cumsum` as the third argument, which returns the cumulative sum of the elements along a given axis.
+
+```{r, echo=FALSE}
+# Cumulative sum by row
+fun2 <- function(mat) {
+  n <- nrow(mat)
+  k <- ncol(mat)
+  ans <- mat
+  for (i in 1:n) {
+    for (j in 2:k) {
+    ans[i,j] <- mat[i, j] + ans[i, j - 1]
+    }
+  }
+  ans
+}
+```
+
+
+
+```{r}
+fun2alt <- function(mat) {
+  ans <- t(apply(mat, 1, cumsum))
+  ans
+}
+```
+
+
+After finishing the two functions, we want to measure and compare the execution time of the original functions and new functions. 
+
+```{r echo=FALSE}
+# Use the data with this code
+set.seed(2315)
+dat <- matrix(rnorm(200 * 100), nrow = 200)
+
+# Test for the first
+microbenchmark::microbenchmark(
+  fun1(dat),
+  fun1alt(dat), unit = "microseconds", check = "equivalent"
+)
+```
+
+Using `microbenchmark`, we could see the comparison between fun1 and fun1alt. Most times it take for fun1 to run are around 350 microseconds, with min of 286.431 microseconds and max of 537.109 microseconds. Compared with that, times it take for fun1alt to run decreased a lot. For fun1alt, average time to run is around 40 microseconds, with min 31.592 microseconds and max 93.708 microseconds. This confirms that `rowSum` here works better than the for loop.
+
+```{r echo=FALSE}
+# Test for the second
+microbenchmark::microbenchmark(
+fun2(dat),
+fun2alt(dat), unit = "microseconds", check = "equivalent"
+)
+```
+
+For fun2 and fun2alt, we could see that The mean time it takes for fun2 to run is around 2161 microseconds, with min of 1849.272 microseconds and max of 3011.422	microseconds. The mean time it takes for fun2alt to run is around 1/3 of fun2: 718 microseconds, with min of 587.844	 microseconds and max of 27680.533	microseconds. This time, the max time to run for fun2alt is much bigger than fun2, and I think this may be some edge case due to using both `apply` and `cumsum`. But overall, I still think fun2alt has a better performance than fun2. 
+
+
+#### Problem 2: parallel computing
+
+```{r, echo=FALSE}
+sim_pi <- function(n = 1000, i = NULL) {
+p <- matrix(runif(n*2), ncol = 2)
+mean(rowSums(p^2) < 1) * 4
+}
+# Here is an example of the run
+set.seed(156)
+sim_pi(1000) # 3.132
+
+# This runs the simulation a 4,000 times, each with 10,000 points
+set.seed(1231)
+system.time({
+ans <- unlist(lapply(1:4000, sim_pi, n = 10000))
+print(mean(ans))
+})
+```
+
+Now we want to using ParLapply to make the code run faster.
+
+```{r, echo=FALSE}
+set.seed(1234)
+
+system.time({
+  cl <- parallel::makePSOCKcluster(2)
+  clusterSetRNGStream(cl, 1231)
+  ans <- unlist(parLapply(cl, 1:4000, sim_pi, n = 10000))
+  print(mean(ans))
+})
+
+stopCluster(cl)
+
+```
+
+Here, we could see that the values for user, system and elapsed (0.017   0.014   2.229) are all smaller in the parallel version compared with the sequential version(3.164   0.763   3.962), which means our parallel version indeed works faster and better. I think that whenever we can, we should always use the parallel version for better performance.
+
+
+### ML
+
+```{r, echo=FALSE, results='hide'}
+players <- read.csv("hitters.csv", stringsAsFactors = T)
+players <- na.omit(players)
+head(players)
+```
+
+First, we want to split our data into training and testing, with 70% for training and 30% for testing.
+
+```{r, echo=FALSE}
+# split into training and testing
+train_idx <- sample(1:nrow(players), round(0.7 * nrow(players)))
+train <- players[train_idx,]
+test <- players[-train_idx,]
+```
+
+#### regression tree
+
+A regression tree is used to predict outputs based on our existing values, using the tree structure.
+
+```{r, echo=FALSE}
+# Fit a regression tree using the training set and then plot it
+treefit <- rpart(Salary~., method = "anova", control = list(cp=0), data = train)
+rpart.plot(treefit)
+```
+
+From the graph above, we could see that the dataset has been splitted into two parts by the predictor `CHits`, which means number of hits during his career. This predictor is the chosen to be the first, it has the smallest gini coefficient thus the best condition we could use to split based on our training data.(correspondingly, the weighted average MSE of the new region will be small) This makes sense since player with higher total hit numbers are better than those with lower total hit numbers.
+
+The problem with the current tree is that it is big and a little bit hard to track. We want to find a way to make the tree smaller.
+
+
+In order to gain a simpler tree, we want to prune the previous one.
+
+```{r, echo=FALSE}
+# Prune and plot the tree and summarize
+optimalcp <- treefit$cptable[which.min(treefit$cptable[,"xerror"]), "CP"]
+treepruned <- prune(treefit, cp = optimalcp)
+rpart.plot(treepruned)
+```
+
+
+Here, we use the optimal complexity parameter cp to select the optimal tree size. This works by comparing the value of cp to the cost of adding another variable to our tree. If the cost is bigger than cp, then the tree will stop growing.
+
+The tree produced after prune is indeed smaller than the previous one with only 4 predictors left: `CHits`, `Walks`, `AtBat`, and `RBI`. Notice that after the first split, half of the data already reach the end. This is so much faster to track than without prune.
+
+
+#### bagging
+
+Bagging is a way to adjust for the high variance of the output of an experiment by performing the experiment multiple times and then average the results. (short for Bootstrap Aggregating)
+
+```{r, echo=FALSE}
+player_bag <- randomForest(Salary~., data = train, mtry=19, na.action = na.omit)
+
+# variable importance plot
+varImpPlot(player_bag, n.var = 19, col = "blue")
+```
+
+
+Here we have construct a variable importance plot, which has a list of the variables in descending order by mean decrease in Gini. We can see that the biggest predictor is `CHits`, which is the same one as we get from previous regression tree method. This graph means that `CHits` is the most important predictor in our model since removing it would result in highest decrease in Gini score. The second predictor and the ones after that are much smaller than `CHits`, which also indicates the importance of `CHits`.
+
+
+#### random forest
+
+Random Forest is a modified form of bagging that creates ensembles of independent decision trees.
+
+```{r, echo=FALSE}
+player_rf <- randomForest(Salary~. , data = train, na.action = na.omit)
+
+# variable importance plot
+varImpPlot(player_rf, n.var=19, col="blue")
+```
+
+Using random forest to plot the variable importance plot, we get a similar result to the previous one with biggest predictor being `CHits`. But many rankings in the list has changed. For example, `Walks` was the 4th most important predictor in previous case, but it is now the 6th important one. Overall, the two variance importance plot gives similar results.
+
+#### boosting
+
+Boosting is an ensemble learning method which takes an ensemble of simple models and combine them into a single, more complex model.
+
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+boosting_mse <- vector(mode = "list", length = 50)
+for (i in 1:50) {
+  player_boost <- gbm(Salary~., data = train, distribution = 'tdist', n.trees = 1000, shrinkage = i * 0.001, interaction.depth = 1)
+  yhat_boost <- predict(player_boost, newdata = test, n.trees = 1000)
+  mse <- mean((yhat_boost-test$Salary)^2)
+  boosting_mse[i] <- mse
+}
+
+x_values <- seq(0.001, 0.05, 0.001) 
+plot(x_values, boosting_mse, xlab = "shrinkage value", ylab = "training set MSE")
+```
+
+From the plot above, we could see that as we increase the shrinkage value, the corresponding training set MSE decreases significantly until around 0.01, then it stays around the same level with a lowest MSE at around shrinkage value of 0.044. So I would graph the variance
+
+
+```{r, echo=FALSE}
+# variable importance plot
+player_boost <- gbm(Salary~., data = train, distribution = 'tdist', n.trees = 1000, shrinkage = 0.044, interaction.depth = 1)
+summary(player_boost)
+```
+
+
+Here we have the variable importance plot and data summarized above using boosting. From the graph and the summary table, we could see that `CWalks` is the most important variable and we should not remove it from our model. `CWalks` means number of walks during his career, and it makes sense to be in the list since number of walks can indicate someone's total exercising time. On the other hand, we also see `PutOuts` as the 7th element in the list, which confirms its importance. (it appears to be the second most important in bagging and random forest)
+
+
+#### XGBoost
+
+XGBoost delivers high performance as compared to Gradient Boosting. Its training is very fast and can be parallelized across clusters.
+
+```{r, echo=FALSE, warning=FALSE, results='hide'}
+
+train_control <- trainControl(method = "cv", number = 10, search = "grid")
+tune_grid <- expand.grid(max_depth = c(1,3,5,7),
+                         nrounds = (1:10) * 50,
+                         eta = c(0.01, 0.1, 0.3),
+                         gamma = 0,
+                         subsample = 1,
+                         min_child_weight = 1,
+                         colsample_bytree = 0.6
+                         )
+player_xgb <- caret::train(Salary~., data = train, method = "xgbTree", trControl = train_control, tuneGrid = tune_grid)
+```
+
+
+
+```{r, echo=FALSE}
+plot(varImp(player_xgb, scale = F))
+```
+
+
+From the variable importance plot generated using XGBoosting, we have the x-axis labeled the importance of each of the predictors on the y-axis. Again, we see `CHits` as the most important variable in our importance graph. Some of the top predictors on the graph also seems familiar(has appeared in previous models too), so I think that all the models do produce some similar results, but with some minor differences due to their different behaviours.
+
+
+#### test MSE for each methods
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+# for regression tree
+tree_pred <- predict(treepruned, test)
+test_tree <- cbind(test, tree_pred)
+tree_mse <- sum((test_tree$tree_pred - test_tree$Salary)^2)/dim(test_tree)[1]
+tree_mse
+# for bagging
+bag_pred <- predict(player_bag, test)
+test_bag <- cbind(test, bag_pred)
+bag_mse <- sum((test_bag$bag_pred - test_bag$Salary)^2)/dim(test_bag)[1]
+bag_mse
+# for random forest
+rf_pred <- predict(player_rf, test)
+test_rf <- cbind(test, rf_pred)
+rf_mse <- sum((test_rf$rf_pred - test_rf$Salary)^2)/dim(test_rf)[1]
+rf_mse
+# for boosting
+boost_pred <- predict(player_boost, test)
+test_boost <- cbind(test, boost_pred)
+boost_mse <- sum((test_boost$boost_pred - test_boost$Salary)^2)/dim(test_boost)[1]
+boost_mse
+# for XGBoost
+xg_pred <- predict(player_xgb, test)
+test_xg <- cbind(test, xg_pred)
+xg_mse <- sum((test_xg$xg_pred - test_xg$Salary)^2)/dim(test_xg)[1]
+xg_mse
+```
+
+
+```{r, echo=FALSE}
+tibble(
+       Methods = c("regression tree", "bagging", "random forest", "boosting", "XGBoost"),
+       MSE = c(98928.78, 81739.97, 86423.04, 69508.75, 124443.2)) %>% 
+  knitr::kable(caption = "different sources of variance and their proportions")
+```
+
+Here we can see that the MSE calculated from the 5 methods are similar, with boosting has the smallest MSE and XGBoost has the biggest MSE. Since the lower MSE the better, I would tend to trust the result from boosting, but still keep other results as references.
+
+
+### conclusion
+
+In conclusion, we have examined the different behaviours of the 5 methods: `regression tree`, `bagging`, `random forest`, `boosting`, and `XGBoost`. We have created visualizations for better understanding of our models, and we do see similarities and differences for all of theses models. At last, we have calculated the corresponding MSE for each of the methods and we saw that boosting has the smallest MSE, so it is the best method in the current case. 

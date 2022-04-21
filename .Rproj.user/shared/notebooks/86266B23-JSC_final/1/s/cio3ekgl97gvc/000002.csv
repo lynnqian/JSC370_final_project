@@ -1,8 +1,0 @@
-"0",""
-"0","playstore$review_level <- ifelse(playstore$Reviews < 1000, ""almost no reviews"", "
-"0","                                    ifelse(playstore$Reviews < 10000, ""medium reviews"", "
-"0","                                           ifelse(playstore$Reviews < 50000, ""many reviews"", ""lots of reviews"")))"
-"0",""
-"0","playstore$install_level <- ifelse(playstore$Installs < 1000, ""not popular"", "
-"0","                                    ifelse(playstore$Installs < 10000, ""normal"", "
-"0","                                           ifelse(playstore$Installs < 50000, ""popular"", ""super popular"")))"

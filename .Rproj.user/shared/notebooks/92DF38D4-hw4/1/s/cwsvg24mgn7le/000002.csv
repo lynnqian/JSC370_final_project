@@ -1,0 +1,4 @@
+"0","fun2alt <- function(mat) {"
+"0","  ans <- t(apply(mat, 1, cumsum))"
+"0","  ans"
+"0","}"

@@ -1,7 +1,0 @@
-"0","# summary table"
-"0","playstore_250 <- playstore %>%"
-"0","  group_by(Category) %>%"
-"0","  filter(n() > 250) %>%"
-"0","  summarise(Rating, n())"
-"2","`summarise()` has grouped output by 'Category'. You can override using the `.groups` argument."
-"0","playstore_250"
